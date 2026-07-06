@@ -34,6 +34,7 @@ namespace BackupServer.API.Models
         public string OS { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
 
+        [Required]
         [Column("client_id")]
         public int ClientId { get; set; }
 
