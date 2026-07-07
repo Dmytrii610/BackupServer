@@ -28,7 +28,7 @@ namespace BackupServer.API.Models
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<BackupLogs> BackupLogs { get; set; } = new List<BackupLogs>();
-        public ICollection<BackupVersions> BackupVersions { get; set; } = new List<BackupVersions>();
+        public ICollection<BackupVersion> BackupVersions { get; set; } = new List<BackupVersion>();
 
     }
 }
