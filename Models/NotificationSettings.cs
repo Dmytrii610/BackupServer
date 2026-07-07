@@ -15,8 +15,8 @@ namespace BackupServer.API.Models
         public Client? Client { get; set; }
         [MaxLength(255)]
         public string? Email { get; set; }
-        public bool NotificationOnSuccess { get; set; } = true;
-        public bool NotifyOnFailure { get; set; } = false;
-        public bool NotifyOnWarning { get; set; } = false;
+        public bool NotificationOnSuccess { get; set; } = false;
+        public bool NotifyOnFailure { get; set; } = true;
+        public bool NotifyOnWarning { get; set; } = true;
     }
 }

@@ -24,8 +24,8 @@ namespace BackupServer.API.Models
         public UsersRole? UsersRole { get; set; }
         [Required]
         public bool IsActive { get; set; } = true;
-        [Required]
-        public DateTime LastLogin { get; set; }
+        
+        public DateTime? LastLogin { get; set; }
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string? LastLoginIP { get; set; }
