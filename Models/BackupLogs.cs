@@ -22,6 +22,5 @@ namespace BackupServer.API.Models
         public string? Message { get; set; }
         [MaxLength(50)]
         public string? Source { get; set; }
-
     }
 }
