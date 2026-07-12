@@ -15,7 +15,7 @@ namespace BackupServer.API.Models
 
         [ForeignKey("ClientTypeId")]
         public ClientType? ClientType { get; set; }
-        //navigation property - zgłębić 
+        
         public ICollection<Host> Hosts { get; set; } = new List<Host>();
         public ICollection<ClientService> ClientServices { get; set; } = new List<ClientService>();
 
