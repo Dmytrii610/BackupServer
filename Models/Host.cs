@@ -49,6 +49,7 @@ namespace BackupServer.API.Models
 
         public ICollection<BackupSchedule> BackupSchedules { get; set; } = new List<BackupSchedule>();
         public ICollection<BackUp> BackUps { get; set; } = new List<BackUp>();
+        public ICollection<ExcludePatterns> ExcludePatterns { get; set; } = new List<ExcludePatterns>();
 
     }
 }
