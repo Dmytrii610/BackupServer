@@ -99,10 +99,10 @@ namespace BackupServer.API.Controllers
                 TaxID = dtoClient.TaxID,
                 CreatedAt = DateTime.UtcNow
             };
-            logger.LogInformation($"Created a new user at: {client.CreatedAt}");
-
+            
             context.Clients.Add(client);
             await context.SaveChangesAsync();
+            logger.LogInformation($"Created a new user at: {client.CreatedAt}");
             return CreatedAtAction(
                 nameof(GetClientByIdAsync),
                 new { id = client.ClientId },

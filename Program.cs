@@ -49,6 +49,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.MapHealthChecks("/health/db");
 app.UseCors("AllowRazorPages");
 app.UseAuthorization();
 app.MapControllers();
