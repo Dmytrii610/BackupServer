@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackupServerContext = BackupServer.API.Data.BackupServerContext;
 
+
 namespace BackupServer.API.Controllers
 {
     [ApiController]
@@ -19,39 +20,89 @@ namespace BackupServer.API.Controllers
             this.logger = logger;
         }
         [HttpGet]
-        public async Task<ActionResult> GetClientsAsync()
+        public async Task<ActionResult<IEnumerable<ClientDetailsDto>>> GetClientsAsync()
         {
-            var clients = await context.Clients
-                .Select(c => new ClientSummaryDto {
-                    ClientId = c.ClientId,
-                    Name = c.Name,
-                    Surname = c.Surname,
-                    ClientTypeName = c.ClientType.Type,
-                    HostCount = c.Hosts.Count,
-                })
+           var clients = await context.Clients
+                .Include(c => c.ClientType)
+                .Include(c => c.Hosts)
                 .ToListAsync();
+
+            var dtos = clients.Select(c => new ClientDetailsDto
+            {
+                ClientId = c.ClientId,
+                Name = c.Name,
+                Surname = c.Surname,
+                EmailContact = c.EmailContact,
+                PhoneContact = c.PhoneContact,
+                TaxID = c.TaxID,
+                CreatedAt = c.CreatedAt,
+                ClientTypeName = c.ClientType?.Type ?? "Unknown",
+                Hosts = c.Hosts.Select(h => new HostSummaryDto
+                {
+                    HostId = h.HostId,
+                    HostName = h.HostName,
+                    HostIP = h.HostIP,
+                    IsActive = h.IsActive
+                }).ToList()
+            });
             logger.LogInformation("Get all clients.");
-            return Ok(clients);
+            return Ok(dtos);
         }
         [HttpGet("{id}")]
-        public async Task<ActionResult> GetClientByIdAsync(int id)
+        public async Task<ActionResult<ClientDetailsDto>> GetClientByIdAsync(int id)
         {
-            var client = await context.Clients.FirstOrDefaultAsync(c => c.ClientId == id);
+            var client = await context.Clients
+                .Include(c => c.ClientType)
+                .Include(c => c.Hosts)
+                .FirstOrDefaultAsync(c => c.ClientId == id);
             if (client == null)
             {
                 logger.LogWarning($"Client with ID: {id} is not found.");
                 return NotFound();
             }
+            var dto =new ClientDetailsDto
+            {
+                ClientId = client.ClientId,
+                Name = client.Name,
+                Surname = client.Surname,
+                EmailContact = client.EmailContact,
+                PhoneContact = client.PhoneContact,
+                TaxID = client.TaxID,
+                CreatedAt = client.CreatedAt,
+                ClientTypeName = client.ClientType?.Type ?? "Unknown",
+                Hosts = client.Hosts.Select(h => new HostSummaryDto
+                {
+                    HostId = h.HostId,
+                    HostName = h.HostName,
+                    HostIP = h.HostIP,
+                    IsActive = h.IsActive
+                }).ToList()
+            };
             logger.LogInformation($"Get client with ID: {id}");
-            return Ok(client);
+            return Ok(dto);
         }
         [HttpPost]
-        public async Task<ActionResult> CreateClientAsync([FromBody] Client client)
+        public async Task<ActionResult<ClientCreateDto>> CreateClientAsync([FromBody] ClientCreateDto dtoClient)
         {
-            client.CreatedAt = DateTime.UtcNow;
+            var clientTypeExist = await context.ClientTypes
+                .AnyAsync(ct => ct.IdType == dtoClient.ClientTypeId);
+            if (!clientTypeExist)
+                return BadRequest();
+
+            var client = new Client
+            {
+                Name = dtoClient.Name,
+                Surname = dtoClient.Surname,
+                EmailContact = dtoClient.EmailContact,
+                ClientTypeId = dtoClient.ClientTypeId,
+                PhoneContact = dtoClient.PhoneContact,
+                TaxID = dtoClient.TaxID,
+                CreatedAt = DateTime.UtcNow
+            };
+            logger.LogInformation($"Created a new user at: {client.CreatedAt}");
+
             context.Clients.Add(client);
             await context.SaveChangesAsync();
-            logger.LogInformation($"Created a new user at: {client.CreatedAt}");
             return CreatedAtAction(
                 nameof(GetClientByIdAsync),
                 new { id = client.ClientId },
@@ -59,13 +110,20 @@ namespace BackupServer.API.Controllers
             );
         }
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateClient(int id, [FromBody] Client client)
+        public async Task<IActionResult> UpdateClient(int id, [FromBody] ClientCreateDto dtoClient)
         {
-            if(id != client.ClientId)
+            var client = await context.Clients.FindAsync(id);
+            if (client == null)
             {
-                logger.LogWarning($"ID missmacth: provided {id} <---> client ID {client.ClientId}");
-                return BadRequest();
+                return NotFound();
             }
+
+            client.Name = dtoClient.Name;
+            client.Surname = dtoClient.Surname;
+            client.EmailContact = dtoClient.EmailContact;
+            client.PhoneContact = dtoClient.PhoneContact;
+            client.TaxID = dtoClient.TaxID;
+
             context.Entry(client).State = EntityState.Modified;
             try
             {
@@ -79,7 +137,7 @@ namespace BackupServer.API.Controllers
             return NoContent();
         }
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteClientByIdAsync(int id)
+        public async Task<IActionResult> DeleteClientByIdAsync(int id)
         {
             var client = await context.Clients.FindAsync(id);
             if(client == null)
