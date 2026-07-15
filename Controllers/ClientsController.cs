@@ -1,5 +1,5 @@
-﻿using BackupServer.API.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using BackupServer.API.DTOs;
+using BackupServer.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackupServerContext = BackupServer.API.Data.BackupServerContext;
@@ -22,8 +22,13 @@ namespace BackupServer.API.Controllers
         public async Task<ActionResult> GetClientsAsync()
         {
             var clients = await context.Clients
-                .Include("ClientType")
-                .Include(c => c.Hosts)
+                .Select(c => new ClientSummaryDto {
+                    ClientId = c.ClientId,
+                    Name = c.Name,
+                    Surname = c.Surname,
+                    ClientTypeName = c.ClientType.Type,
+                    HostCount = c.Hosts.Count,
+                })
                 .ToListAsync();
             logger.LogInformation("Get all clients.");
             return Ok(clients);
@@ -31,13 +36,13 @@ namespace BackupServer.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult> GetClientByIdAsync(int id)
         {
-            var client = await context.Clients.FirstOrDefaultAsync(x => x.ClientId == id);
+            var client = await context.Clients.FirstOrDefaultAsync(c => c.ClientId == id);
             if (client == null)
             {
                 logger.LogWarning($"Client with ID: {id} is not found.");
                 return NotFound();
             }
-            logger.LogInformation($"Getting client with ID: {id}");
+            logger.LogInformation($"Get client with ID: {id}");
             return Ok(client);
         }
         [HttpPost]
