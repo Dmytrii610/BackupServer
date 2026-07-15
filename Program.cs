@@ -2,6 +2,8 @@ using BackupServer.API.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<BackupServerContext>("Database");
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
