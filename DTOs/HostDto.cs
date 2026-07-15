@@ -9,6 +9,6 @@
     }
     public record HostCreateDto
     {
-        public int
+        
     }
 }
